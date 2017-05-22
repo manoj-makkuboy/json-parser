@@ -19,8 +19,24 @@ def string_parser(string):
 
 
 def array_parser(string):
-    pass
+    if(string[0] == '['):
+        parsed_list = []
+        string = string[1:]
 
+        while (string[0] != ']'):
+
+            if(string[0] == '"'):
+                value,string = string_parser(string)
+                parsed_list.append(value)
+                string = string.strip()
+            if(string[0] == '{'):
+                value,string = object_parser(string)
+                parsed_list.append(value)
+                string = string.strip()
+            if(string[0] == ','):
+                string = string[1:]
+                continue
+        return (parsed_list, string[1:])
 
 def object_parser(string):
     if(string[0] == '{'):
@@ -32,24 +48,28 @@ def object_parser(string):
         while(string[0] != '}'):
 
             if (string[0] == '"'):   # assuming key will be a string
-                key_string_tuple = string_parser(string[:])
+                key_string_tuple = string_parser(string)
                 key, string = key_string_tuple   # return of string_parser of form ("","") tuple
                 string = string.strip()    # strip after key creation
             if (string[0] != ':'):
                 raise SyntaxError(" : not found after key")
-            if(string[0] == ':'):
+            else:
                 string = string[1:]
                 string = string.strip()
 
-
-            if (string[0] == '"'):
+                                          # start of value
+            if (string[0] == '"'):          # if value is a string
                 value_string_tuple = string_parser(string[:])
                 value, string = value_string_tuple
                 string = string.strip()    # strip after value creation
 
-            if (string[0] == '{'):
+            if (string[0] == '{'):         # if value is a JS object
                 value_dict_tuple = object_parser(string)   #recursive call when value is a dict
                 value, string = value_dict_tuple
+
+            if (string[0] == '['):
+                value_list_tuple = array_parser(string)
+                value, string = value_list_tuple
 
             string = string.strip()
             parsed_dict[key] = value   # key: value pair generated
