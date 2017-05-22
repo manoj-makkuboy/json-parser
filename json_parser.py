@@ -1,4 +1,3 @@
-import re
 import pdb
 
 def string_parser(string):
@@ -36,11 +35,10 @@ def object_parser(string):
                 key_string_tuple = string_parser(string[:])
                 key, string = key_string_tuple   # return of string_parser of form ("","") tuple
                 string = string.strip()    # strip after key creation
-#            if (string[0] != ':'):
-#                raise SyntaxError(" : not found after key")
+            if (string[0] != ':'):
+                raise SyntaxError(" : not found after key")
             if(string[0] == ':'):
                 string = string[1:]
-#                pdb.set_trace()
                 string = string.strip()
 
 
@@ -54,7 +52,6 @@ def object_parser(string):
                 value, string = value_dict_tuple
 
             string = string.strip()
-#            pdb.set_trace()
             parsed_dict[key] = value   # key: value pair generated
 
 
