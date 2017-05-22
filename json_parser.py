@@ -10,6 +10,8 @@ def string_parser(string):
 
         x = 1
         while (string[x] != '"'):
+            if(string[x] == '\\'):
+                x +=1                   # incrementing pointer when escape sequence is encountered
             parsed_string = parsed_string + string[x]
             x += 1
         unparsed_string = string[x+1:]
