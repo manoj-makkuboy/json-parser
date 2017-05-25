@@ -3,17 +3,21 @@ from pprint import pprint
 
 
 def strip(self):  # overridding strip() to act as whitespace_parser()
-    return self.lstrip(' ').lstrip('/n').lstrip('/t')
+    offset = re.match(r'\s+')
+
+    if (offset is not None):
+        return self
+    else:
+        return (self[len(offset):])
 
 
 def string_parser(string):
 
-    parsed_string = ''
-    unparsed_string = ''
-
     if(string[0] != '"'):
         return (None, string.strip())
 
+    parsed_string = ''
+    unparsed_string = ''
     x = 1
     while (string[x] != '"'):
         if(string[x] == '\\'):  # encounter of escape sequence
@@ -108,8 +112,7 @@ def object_parser(string):
         return (None, string.strip())
 
     parsed_dict = {}
-    string = string[1:]
-    string = string.strip()
+    string = string[1:].strip()
 
     while(string[0] != '}'):
         key, string = string_parser(string)
@@ -129,4 +132,4 @@ if __name__ == "__main__":
         content = f.read()
 
     content = ''.join(x for x in content)
-    pprint(object_parser(content))
+    pprint(object_parser(content)[0])
