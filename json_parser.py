@@ -1,4 +1,3 @@
-import pdb
 import re
 
 def string_parser(string):
@@ -9,20 +8,21 @@ def string_parser(string):
     if(string[0] != '"'):
         return (None,string.strip())
 
-    if(string[0] == '"'):
 
-        x = 1
-        while (string[x] != '"'):
-            if(string[x] == '\\'):  # encounter of escape sequence
-                x += 1
-            parsed_string = parsed_string + string[x]
+    x = 1
+    while (string[x] != '"'):
+        if(string[x] == '\\'):  # encounter of escape sequence
             x += 1
-        unparsed_string = string[x+1:]
+        parsed_string = parsed_string + string[x]
+        x += 1
+    unparsed_string = string[x+1:]
     return (parsed_string, unparsed_string.strip())
 
+def null_parser(string):
+    if (re.match('null',string) != None):
+        return (None, string[4:].strip())
 
-def value_parser(string):
-    original_string = string
+def boolean_parser(string):
     parsed_value = None
 
     if (re.match('true',string) != None):
@@ -33,15 +33,10 @@ def value_parser(string):
         parsed_value = False
         string = string[5:].strip()
 
-    elif (re.match('null',string) != None):
-        parsed_value = None
-        string =  string[4:].strip()
-
-    if(original_string != string):
-        return (parsed_value, string )
-    else:
-        return None
-
+#    elif (re.match('null',string) != None):
+#        parsed_value = None
+#        string =  string[4:].strip()
+    return (parsed_value , string)
 
 def number_parser(string):
 
@@ -56,7 +51,6 @@ def number_parser(string):
     return (parsed_number, string[len(to_parse_number_str):].strip())
 
 
-
 def array_parser(string):
     if (string[0] != '['):
         return (None, string.strip())
@@ -65,29 +59,25 @@ def array_parser(string):
         string = string[1:]
 
         while (string[0] != ']'):
+            value,string = value_parser(string)   # checking if the value is string
 
-            value,string = string_parser(string)   # checking if the value is string
-
-            if(value != None):
-                parsed_list.append(value)
-
-            value,string = object_parser(string) #sending to Object parser
-
-            if(value != None):
-                parsed_list.append(value)
-
-            value,string = number_parser(string) # sending to number_parser
-
-            if (value != None):
-                parsed_list.append(value)
-
-            if(value_parser(string) != None): # if return None means the value is not null
-                value, string = value_parser(string)  # value parsing
-                parsed_list.append(value)
-
+            parsed_list.append(value)
             string = comma_parser(string)
 
         return (parsed_list, string[1:].strip())
+
+def value_parser(string):
+    parser_tuple = (string_parser, array_parser, object_parser, number_parser, boolean_parser,)  # null_parser should be added
+    for parser_func in parser_tuple:
+
+        value, string = parser_func(string.strip())
+
+        if(value != None):
+            return (value, string.strip())
+
+        if (null_parser(string) != None):     # special check for null_parser
+            return null_parser(string)
+
 
 
 def comma_parser(string):
@@ -134,10 +124,13 @@ def object_parser(string):
             if (value is None):
                 value, string = number_parser(string)
 
-            if (value is None):    # always put value_parser at last
-                value, string = value_parser(string)
+            if (value is None):    # always put boolean_parser at last
+                value, string = boolean_parser(string)
 
-            string = string.strip()
+            if (value is None):      # special check for null_parser
+                if(null_parser(string) != None):
+                    value, string = null_parser(string)
+
             parsed_dict[key] = value   # key: value pair generated
 
             string = comma_parser(string)
