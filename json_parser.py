@@ -2,7 +2,7 @@ import re
 from pprint import pprint
 
 
-def strip(self):
+def strip(self):  # overridding strip() to act as whitespace_parser()
     return self.lstrip(' ').lstrip('/n').lstrip('/t')
 
 
@@ -64,7 +64,6 @@ def array_parser(string):
 
     while (string[0] != ']'):
         value, string = value_parser(string)   # checking if the value is string
-
         parsed_list.append(value)
         string = comma_parser(string)
 
@@ -89,7 +88,11 @@ def value_parser(string):
 def comma_parser(string):
     if(string[0] != ','):
         return string.strip()
+
     else:
+        if(string[1] == ']' or string[1] == '}'):
+            raise SyntaxError("Invalid Json , should be followed by value")
+
         return string[1:].strip()
 
 
@@ -106,23 +109,17 @@ def object_parser(string):
 
     parsed_dict = {}
     string = string[1:]
-
     string = string.strip()
 
     while(string[0] != '}'):
-
         key, string = string_parser(string)
-
         string = colon_parser(string)  # expected : after key
         if (string is None):
             raise SyntaxError(": not found")
 
         value, string = value_parser(string)  # finding value
-
         parsed_dict[key] = value   # key: value pair generated
-
         string = comma_parser(string)
-
         continue
 
     return (parsed_dict, string[1:])
@@ -133,6 +130,3 @@ if __name__ == "__main__":
 
     content = ''.join(x for x in content)
     pprint(object_parser(content))
-#    print (content)
-#    content = re.search(r'(".*?")', content)
-#    print (content)
