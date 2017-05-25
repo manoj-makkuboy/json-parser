@@ -1,8 +1,10 @@
 import re
 from pprint import pprint
 
+
 def strip(self):
-    return  self.lstrip(' ').lstrip('/n').lstrip('/t')
+    return self.lstrip(' ').lstrip('/n').lstrip('/t')
+
 
 def string_parser(string):
 
@@ -77,7 +79,7 @@ def value_parser(string):
 
         value, string = parser_func(string.strip())
 
-        if(value != None):
+        if(value is not None):
             return (value, string.strip())
 
         if (null_parser(string) != None):     # special check for null_parser
@@ -111,11 +113,11 @@ def object_parser(string):
 
         key, string = string_parser(string)
 
-        string = colon_parser(string) # expected : after key
+        string = colon_parser(string)  # expected : after key
         if (string is None):
             raise SyntaxError(": not found")
-                                      # start of value
-        value, string = value_parser(string)
+
+        value, string = value_parser(string)  # finding value
 
         parsed_dict[key] = value   # key: value pair generated
 
@@ -130,7 +132,7 @@ if __name__ == "__main__":
         content = f.read()
 
     content = ''.join(x for x in content)
-    pprint (object_parser(content))
+    pprint(object_parser(content))
 #    print (content)
 #    content = re.search(r'(".*?")', content)
 #    print (content)
