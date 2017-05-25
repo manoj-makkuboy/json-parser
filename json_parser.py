@@ -1,4 +1,8 @@
 import re
+from pprint import pprint
+
+def strip(self):
+    return  self.lstrip(' ').lstrip('/n').lstrip('/t')
 
 def string_parser(string):
 
@@ -6,8 +10,7 @@ def string_parser(string):
     unparsed_string = ''
 
     if(string[0] != '"'):
-        return (None,string.strip())
-
+        return (None, string.strip())
 
     x = 1
     while (string[x] != '"'):
@@ -18,29 +21,29 @@ def string_parser(string):
     unparsed_string = string[x+1:]
     return (parsed_string, unparsed_string.strip())
 
+
 def null_parser(string):
-    if (re.match('null',string) != None):
+    if (re.match('null', string) != None):
         return (None, string[4:].strip())
+
 
 def boolean_parser(string):
     parsed_value = None
 
-    if (re.match('true',string) != None):
+    if (re.match('true', string) != None):
         parsed_value = True
         string = string[4:].strip()
 
-    elif (re.match('false',string) != None):
+    elif (re.match('false', string) != None):
         parsed_value = False
         string = string[5:].strip()
 
-#    elif (re.match('null',string) != None):
-#        parsed_value = None
-#        string =  string[4:].strip()
-    return (parsed_value , string)
+    return (parsed_value, string)
+
 
 def number_parser(string):
 
-    to_parse_number_str = ''.join(re.findall(r'^((?:-?\d+)(?:\.?\d+)?(?:[Ee][+-]\d+)?)',string))
+    to_parse_number_str = ''.join(re.findall(r'^((?:-?\d+)(?:\.?\d+)?(?:[Ee][+-]\d+)?)', string))
     if (len(to_parse_number_str) == 0):
         return (None, string)
     try:
@@ -54,20 +57,22 @@ def number_parser(string):
 def array_parser(string):
     if (string[0] != '['):
         return (None, string.strip())
-    if(string[0] == '['):
-        parsed_list = []
-        string = string[1:]
+    parsed_list = []
+    string = string[1:]
 
-        while (string[0] != ']'):
-            value,string = value_parser(string)   # checking if the value is string
+    while (string[0] != ']'):
+        value, string = value_parser(string)   # checking if the value is string
 
-            parsed_list.append(value)
-            string = comma_parser(string)
+        parsed_list.append(value)
+        string = comma_parser(string)
 
-        return (parsed_list, string[1:].strip())
+    return (parsed_list, string[1:].strip())
+
 
 def value_parser(string):
-    parser_tuple = (string_parser, array_parser, object_parser, number_parser, boolean_parser,)  # null_parser should be added
+    parser_tuple = (string_parser, array_parser, object_parser,
+                    number_parser, boolean_parser,)
+
     for parser_func in parser_tuple:
 
         value, string = parser_func(string.strip())
@@ -77,7 +82,6 @@ def value_parser(string):
 
         if (null_parser(string) != None):     # special check for null_parser
             return null_parser(string)
-
 
 
 def comma_parser(string):
@@ -96,54 +100,37 @@ def colon_parser(string):
 
 def object_parser(string):
     if(string[0] != '{'):
-        return (None,string.strip())
+        return (None, string.strip())
 
-    if(string[0] == '{'):
-        parsed_dict = {}
-        string = string[1:]
+    parsed_dict = {}
+    string = string[1:]
 
-        string = string.strip()
+    string = string.strip()
 
-        while(string[0] != '}'):
+    while(string[0] != '}'):
 
-            key, string = string_parser(string)   # return of string_parser of form ("","") tuple
+        key, string = string_parser(string)
 
-            string = colon_parser(string) # expected : after key
-            if (string is None):
-                raise SyntaxError(": not found")
+        string = colon_parser(string) # expected : after key
+        if (string is None):
+            raise SyntaxError(": not found")
+                                      # start of value
+        value, string = value_parser(string)
 
-                                          # start of value
-            value, string = string_parser(string)   # checking for string value
+        parsed_dict[key] = value   # key: value pair generated
 
-            if (value is None): # if value is a JS object
-                value, string = object_parser(string)
+        string = comma_parser(string)
 
-            if (value is None):
-                value, string = array_parser(string)
-                                    # number parser
-            if (value is None):
-                value, string = number_parser(string)
+        continue
 
-            if (value is None):    # always put boolean_parser at last
-                value, string = boolean_parser(string)
-
-            if (value is None):      # special check for null_parser
-                if(null_parser(string) != None):
-                    value, string = null_parser(string)
-
-            parsed_dict[key] = value   # key: value pair generated
-
-            string = comma_parser(string)
-
-            continue
-
-        return (parsed_dict, string[1:])
+    return (parsed_dict, string[1:])
 
 if __name__ == "__main__":
     with open('first.json') as f:
         content = f.read()
 
-    content = ''.join(x.strip('\n').strip('\t') for x in content)
-    print (content)
-    content = re.search(r'(".*?")', content)
-    print (content)
+    content = ''.join(x for x in content)
+    pprint (object_parser(content))
+#    print (content)
+#    content = re.search(r'(".*?")', content)
+#    print (content)
