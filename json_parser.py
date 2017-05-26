@@ -128,8 +128,9 @@ def object_parser(string):
     return (parsed_dict, string[1:])
 
 if __name__ == "__main__":
-    with open('first.json') as f:
+    with open('3.json') as f:
         content = f.read()
-
-    content = ''.join(x for x in content)
-    pprint(object_parser(content)[0])
+    if(content.strip()[0] == '{'):
+        pprint(object_parser(content)[0])
+    elif(content.strip()[0] == '['):
+        pprint(array_parser(content)[0])
